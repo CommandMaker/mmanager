@@ -16,7 +16,7 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Self
+from typing import Any, Self
 
 
 class Model(ABC):
@@ -25,7 +25,40 @@ class Model(ABC):
     It contains the most basic functions that all models needs.
     '''
 
-    @classmethod
+    @staticmethod
     @abstractmethod
-    def build_from_dict(cls, dikt: dict[str, str]) -> Self:
+    def fields() -> list[str] | dict[str, str | None]:
+        '''
+        Return the list of fields that will be mapped by the build_from_dict method
+        Can be a list[str] if fields have the same name in the database and in the class
+        or a dict[str, str | None] if fields are named differently. None means that the names are the
+        same.
+        '''
         pass
+
+    @classmethod
+    def build_from_dict(cls, dikt: dict[str, str]) -> Self:
+        '''
+        Build a new instance of a model using the list of properties defined in the model
+        '''
+        fields = cls.fields()
+        args: dict[str, Any] = {} # pyright: ignore[reportExplicitAny]
+
+        if type(fields) == dict:
+            for k, v in fields.items(): # k is the SQL column name and v is the class field name
+                if v == None:
+                    v = k # We use the same variable name for SQL and object
+
+                if not v in dikt:
+                    raise Exception(f'Missing property "{v}" on the dict')
+
+                args[v] = dikt[k]
+        elif type(fields) == list:
+            for v in fields:
+                if not v in dikt:
+                    raise Exception(f'Missing property "{v}" on the dict')
+
+                args[v] = dikt[v]
+
+        return cls(**args)
+

@@ -14,32 +14,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
 from typing import override
 from database.models.model import Model
-from database.query import SelectQuery
 
 
-class Artist(Model):
-    def __init__(
-        self,
-        name: str,
-        folder_name: str,
-        id: int|None = None,
-    ) -> None:
-        self.id: int|None = id
+class Album(Model):
+    def __init__(self, name: str, folder_name: str, release_year: str, artist_id: int, cover_id: int | None = None, id: int | None = None) -> None:
+        self.id: int | None = id
         self.name: str = name
         self.folder_name: str = folder_name
-
-
-    @staticmethod
-    def fetch_artists() -> list[Artist]:
-        artists = SelectQuery('artists')\
-            .fetch_all(Artist)
-        return artists
+        self.release_year: str = release_year
+        self.artist_id: int = artist_id
+        self.cover_id: int | None = cover_id
 
 
     @override
     @staticmethod
     def fields() -> list[str]:
-        return ['id', 'name', 'folder_name']
+        return ['id', 'name', 'folder_name', 'release_year', 'artist_id', 'cover_id']
