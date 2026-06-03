@@ -67,7 +67,7 @@ class SelectQuery:
         @param {str} haystack The column to test the needle against
         @returns {Self} The updated query
         '''
-        self.query += [f"WHERE {needle} {operation} '{haystack}'"]
+        self.query += [f"WHERE {needle} {operation.value} '{haystack}'"]
 
         return self
 
@@ -99,10 +99,23 @@ class SelectQuery:
         '''
         Fetch all rows matching the query built
 
-        @params {type[T]} klass The model class to convert the results to. Must be a class herited from Model
+        @param {type[T]} klass The model class to convert the results to. Must be a class herited from Model
         @returns {list[T]} Returns the list of rows converted to the given model
         '''
         db = DatabaseConnection.get_instance()
         results: list[sqlite3.Row] = db.get_cursor().execute(self.get_query(), self.arguments).fetchall()
 
         return [klass.build_from_dict(dict(row)) for row in results]
+
+
+    def fetch_one(self, klass: type[T]) -> T:
+        '''
+        Fetch the first row matching the query
+
+        @param {type[T]} klass The model to convert the result to
+        @returns {T} Returns the result as a model
+        '''
+        db = DatabaseConnection.get_instance()
+        result: sqlite3.Row = db.get_cursor().execute(self.get_query(), self.arguments).fetchone() # pyright: ignore[reportAny] Don't know why it's reported as Any here
+
+        return klass.build_from_dict(dict(result))

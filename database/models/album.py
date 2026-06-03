@@ -15,7 +15,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from typing import override
+from database.models.artist import Artist
 from database.models.model import Model
+from database.query import SelectQuery
 
 
 class Album(Model):
@@ -26,6 +28,20 @@ class Album(Model):
         self.release_year: str = release_year
         self.artist_id: int = artist_id
         self.cover_id: int | None = cover_id
+
+        artist = self.hasOne(Artist, 'artists', 'artist_id')
+
+        if type(artist) == Artist:
+            self.artist: Artist = artist
+
+
+    @staticmethod
+    def find_all() -> list[Album]:
+        '''
+        Retrieve all albums from the database
+        '''
+        return SelectQuery('albums')\
+            .fetch_all(Album)
 
 
     @override

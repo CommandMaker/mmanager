@@ -16,7 +16,11 @@
 
 
 from abc import ABC, abstractmethod
-from typing import Any, Self
+from typing import Any, Self, TypeVar
+
+
+
+T = TypeVar('T', bound='Model')
 
 
 class Model(ABC):
@@ -62,3 +66,40 @@ class Model(ABC):
 
         return cls(**args)
 
+
+    def hasOne(self, model: type[T], table: str, foreign_key: str) -> T | None:
+        '''
+        Return the elements of the given One to One relation
+
+        @param {type[T]} model The model to convert the result to
+        @param {str} table The table to fetch the data in
+        @param {str} foreign_key The name of the foreign key
+        @returns {T} The result as a model
+        '''
+        if self.__getattribute__(foreign_key) == None:
+            return None
+
+        from database.query import SQLOperation, SelectQuery
+        result = SelectQuery(table)\
+            .where('id', SQLOperation.EQUALS, self.__getattribute__(foreign_key)).fetch_one(model) # pyright: ignore[reportAny]
+
+        return result
+
+
+    def hasMany(self, model: type[T], table: str, foreign_key: str) -> list[T] | None:
+        '''
+        Return all elements of the given Many relation
+
+        @param {type[T]} model The model to convert results to
+        @param {str} table The table to fetch the data in
+        @param {str} foreign_key The name of the foreign key
+        @returns {list[T]} The results as a list of models
+        '''
+        if self.__getattribute__(foreign_key) == None:
+            return None
+
+        from database.query import SQLOperation, SelectQuery
+        results = SelectQuery(table)\
+            .where('id', SQLOperation.EQUALS, self.__getattribute__(foreign_key)).fetch_all(model) # pyright: ignore[reportAny]
+
+        return results

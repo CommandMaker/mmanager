@@ -17,6 +17,9 @@
 
 from typing import override
 from database.models.model import Model
+from database.models.album import Album
+from database.models.genre import Genre
+from database.models.artist import Artist
 
 
 class Song(Model):
@@ -45,6 +48,11 @@ class Song(Model):
         self.album_artist_id: int | None = album_artist_id
         self.composer_id: int | None = composer_id
         self.disc_number: int | None = disc_number
+
+        self.album: Album | None = self.hasOne(Album, 'albums', 'album_id')
+        self.genre: Genre | None = self.hasOne(Genre, 'genres', 'genre_id')
+        self.album_artist: Artist | None = self.hasOne(Artist, 'artists', 'album_artist_id')
+        self.composer: Artist | None = self.hasOne(Artist, 'artists', 'composer_id')
 
 
     @override
