@@ -13,3 +13,9 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+from app.cli.process_args import dispatch_command, process_args
+
+
+dispatch_command(process_args())
