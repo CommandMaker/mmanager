@@ -85,6 +85,27 @@ class DatabaseConnection:
         return self.connection.cursor()
 
 
+    def load_sql_schema(self) -> None:
+        '''
+        Load the SQL schema file to create the database
+        '''
+        schema_file = os.path.join(os.path.dirname(__file__), 'schema.sql')
+
+        if not os.path.exists(schema_file):
+            raise Exception('The SQL schema file does not exists')
+
+        with open(schema_file, 'r') as schema:
+            _ = self.get_cursor().executescript(schema.read())
+            self.commit()
+
+
+    def commit(self) -> None:
+        '''
+        Commit changes to the database
+        '''
+        self.connection.commit()
+
+
     @staticmethod
     def get_instance(db_path: str | None = None) -> DatabaseConnection:
         '''
