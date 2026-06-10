@@ -28,26 +28,17 @@ class DatabaseConnection:
     def __init__(self, db_path: str) -> None:
         '''
         Create a new database connection.
-        Automatically open the connection after checking the health of the connection
+        Automatically open the connection
         '''
         self.db_path: str = db_path
         self.closed: bool = True
 
-        _ = self.check_health()
+        exists = os.path.exists(db_path)
 
         self.connection: sqlite3.Connection = self.open_connection()
 
-
-    def check_health(self) -> bool:
-        '''
-        Check the specified database file to avoid any errors while opening
-
-        @returns {bool} If the file is valid
-        '''
-        if not os.path.exists(self.db_path) or os.path.isdir(self.db_path):
-            raise ValueError('The specified database path does not exists or is not a database file')
-
-        return True
+        if not exists:
+            self.load_sql_schema()
 
 
     def open_connection(self) -> sqlite3.Connection:
@@ -95,7 +86,8 @@ class DatabaseConnection:
             raise Exception('The SQL schema file does not exists')
 
         with open(schema_file, 'r') as schema:
-            _ = self.get_cursor().executescript(schema.read())
+            script = schema.read()
+            _ = self.get_cursor().executescript(script)
             self.commit()
 
 

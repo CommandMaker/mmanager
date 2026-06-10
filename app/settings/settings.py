@@ -36,7 +36,7 @@ class Settings:
         self.__settings = {}
 
 
-    def set(self, key: str, value: json_value_t, flush: bool = True) -> None:
+    def set(self, key: str, value: json_value_t) -> None:
         '''
         Add or replace a value in the settings
 
@@ -44,8 +44,6 @@ class Settings:
         @param {str | int | bool} value The value to save
         '''
         self.__settings[key] = value
-        if flush:
-            self.flush()
 
 
     def get(self, key: str, _: type[T] = str) -> T:
@@ -70,41 +68,6 @@ class Settings:
         @returns {bool}
         '''
         return key in self.__settings
-
-
-    def flush(self) -> None:
-        '''
-        Flush settings to the config file
-        '''
-        blacklist = ['config_folder'] # Some settings doesn't need to be saved to the file
-        s: json_t = {}
-
-        for key, value in self.__settings.items():
-            if not key in blacklist:
-                s[key] = value
-
-        config_file = os.path.join(self.get('config_folder'), 'config.json')
-
-        with open(config_file, 'w') as file:
-            _ = file.write(json.dumps(s))
-
-
-    def load_settings_from_config(self, config_path: str) -> None:
-        '''
-        Load the given settings file.
-
-        @param {str} config_path The absolute path of the file to load
-        '''
-        if not os.path.exists(config_path) or not os.path.isdir(config_path):
-            return
-
-        with open(config_path, 'r') as file:
-            c_json = cast(json_t, json.loads(file.read()))
-
-            if type(c_json) == dict:
-                for k, v in c_json.items():
-                    if not k in self.__settings: # If settings are already defined, that means they were overrided, so we don't load from file
-                        self.__settings[k] = v
 
 
     @staticmethod

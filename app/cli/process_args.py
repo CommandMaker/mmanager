@@ -16,6 +16,10 @@
 
 import argparse
 
+from app.prepare_app import prepare_app
+from app.settings.default_settings import load_default_settings
+from app.settings.settings import Settings
+
 
 def process_args(argv: list[str] | None = None) -> argparse.Namespace:
     '''
@@ -25,11 +29,13 @@ def process_args(argv: list[str] | None = None) -> argparse.Namespace:
     @returns {argparse.Namespace} The args validated and parsed
     '''
     parser = argparse.ArgumentParser(description='Manage your music library efficiently', epilog='Released under GPL3 license. Written by Command_maker. 2026')
+
+    _ = parser.add_argument('--database', help='Override the default database path', type=str)
+
     commands = parser.add_subparsers(title='Commands', dest='command', required=True)
 
     db = commands.add_parser('database', help='Manage the app internal database')
-    _ = db.add_argument('subcommand', help='Action to do on the database', choices=['create', 'restore', 'delete', 'update'])
-    _ = db.add_argument('--path', '-p', help='Override the default database path')
+    _ = db.add_argument('subcommand', help='Action to do on the database', choices=['create', 'rebuild', 'delete', 'update'])
 
     fs = commands.add_parser('fs', help='Manage the audio files')
     _ = fs.add_argument('subcommand', help='Action to do on the files', choices=['sort', 'flush'])
@@ -43,14 +49,33 @@ def dispatch_command(args: argparse.Namespace) -> None:
 
     @param {argparse.Namespace} namespace The result of the args parsing
     '''
+
+    load_default_settings()
+    override_default_settings(args)
+    prepare_app()
+
     command = get_required_str_arg(args, 'command')
     match command:
         case 'database':
             print('database command')
+            print(Settings.get_instance().get('database_path'))
         case 'fs':
             print('fs command')
         case _:
             raise ValueError(f'Unknown command {command}')
+
+
+def override_default_settings(args: argparse.Namespace) -> None:
+    '''
+    Override the default settings with the ones provided by the user
+
+    @param {argparse.Namespace} args The args of the app
+    '''
+    settings = Settings.get_instance()
+    db_path = get_str_arg(args, 'database')
+
+    if db_path != None:
+        settings.set('database_path', db_path)
 
 
 #==============================================
@@ -68,3 +93,15 @@ def get_required_str_arg(args: argparse.Namespace, key: str) -> str:
         return getattr(args, key, '')
 
     return ''
+
+
+def get_str_arg(args: argparse.Namespace, key: str, fallback: str | None = None) -> str | None:
+    '''
+    Return the value of an optional argument. If not specified, return `fallback`
+
+    @param {argparse.Namespace} args The args of the app
+    @param {str} key The key of the arg
+    @param {str | None} fallback The fallback value if the arg was not provided
+    @returns {str | None} The arg value or the fallback
+    '''
+    return getattr(args, key, fallback)

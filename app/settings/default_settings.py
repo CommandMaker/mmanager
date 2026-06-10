@@ -20,7 +20,7 @@ import sys
 from app.settings.settings import Settings
 
 
-def apply_default_settings() -> None:
+def load_default_settings() -> None:
     '''
     Apply the app default settings
     '''
@@ -29,5 +29,5 @@ def apply_default_settings() -> None:
     database_path = os.path.join(config_folder, 'database.db')
 
     settings = Settings.get_instance()
-    settings.set('config_folder', config_folder, False)
-    settings.set('database_path', database_path, False)
+    settings.set('config_folder', config_folder)
+    settings.set('database_path', database_path)

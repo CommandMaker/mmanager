@@ -14,17 +14,20 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+
 import os
-
 from app.settings.settings import Settings
+from database.connection import DatabaseConnection
 
 
-def create_folder_if_needed() -> None:
+def prepare_app() -> None:
     '''
-    Create the default config folder if it doesn't exists
+    Prepare the app by creating the database if it doesn't exists
     '''
-    settings = Settings.get_instance()
-    config_folder = settings.get('config_folder')
+    db_path = Settings.get_instance().get('database_path')
+    db_folder = os.path.dirname(db_path)
 
-    if not os.path.exists(config_folder):
-        os.mkdir(config_folder)
+    if db_folder != '' and not os.path.exists(db_folder):
+        os.mkdir(db_folder)
+
+    _ = DatabaseConnection.get_instance(db_path)
