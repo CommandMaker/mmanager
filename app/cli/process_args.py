@@ -16,6 +16,7 @@
 
 import argparse
 
+from app.cli.log.logger import log
 from app.prepare_app import prepare_app
 from app.settings.default_settings import load_default_settings
 from app.settings.settings import Settings
@@ -31,6 +32,7 @@ def process_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description='Manage your music library efficiently', epilog='Released under GPL3 license. Written by Command_maker. 2026')
 
     _ = parser.add_argument('--database', help='Override the default database path', type=str)
+    _ = parser.add_argument('--quiet', '-q', action='store_true', help='Disable logging')
 
     commands = parser.add_subparsers(title='Commands', dest='command', required=True)
 
@@ -51,6 +53,7 @@ def dispatch_command(args: argparse.Namespace) -> None:
     '''
 
     load_default_settings()
+    log('Loading default settings')
     override_default_settings(args)
     prepare_app()
 
@@ -73,8 +76,13 @@ def override_default_settings(args: argparse.Namespace) -> None:
     '''
     settings = Settings.get_instance()
     db_path = get_str_arg(args, 'database')
+    quiet = get_bool_arg(args, 'quiet')
+
+    if quiet == True:
+        settings.set('log_disabled', True)
 
     if db_path != None:
+        log(f'Overriding default database path to {db_path}')
         settings.set('database_path', db_path)
 
 
@@ -103,5 +111,17 @@ def get_str_arg(args: argparse.Namespace, key: str, fallback: str | None = None)
     @param {str} key The key of the arg
     @param {str | None} fallback The fallback value if the arg was not provided
     @returns {str | None} The arg value or the fallback
+    '''
+    return getattr(args, key, fallback)
+
+
+def get_bool_arg(args: argparse.Namespace, key: str, fallback: bool | None = None) -> bool | None:
+    '''
+    Return the value of an optional argument. If not specified, return `fallback`
+
+    @param {argparse.Namespace} args The args of the app
+    @param {bool} key The key of the arg
+    @param {bool | None} fallback The fallback value if the arg was not provided
+    @returns {bool | None} The arg value or the fallback
     '''
     return getattr(args, key, fallback)

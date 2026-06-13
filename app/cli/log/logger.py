@@ -14,21 +14,15 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-import os
-import sys
-
 from app.settings.settings import Settings
 
 
-def load_default_settings() -> None:
+def log(msg : str) -> None:
     '''
-    Apply the app default settings
-    '''
-    user_folder = os.path.expanduser('~user') if sys.platform.startswith('win32') else os.path.expanduser('~')
-    config_folder = os.path.join(user_folder, 'AppData/Roaming/' if sys.platform.startswith('win32') else '.config/mmanager/')
-    database_path = os.path.join(config_folder, 'database.db')
+    Log the given message if not disabled
 
-    settings = Settings.get_instance()
-    settings.set('config_folder', config_folder)
-    settings.set('database_path', database_path)
-    settings.set('log_disabled', False)
+    @param {str} message
+    '''
+    if not Settings.get_instance().get('log_disabled', bool):
+       print(f'[LOG] {msg}')
+
