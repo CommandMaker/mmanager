@@ -16,6 +16,8 @@
 
 import argparse
 
+from app.cli.actions.database import dispatch_database_command
+from app.cli.helpers import get_bool_arg, get_required_str_arg, get_str_arg
 from app.cli.log.logger import log
 from app.prepare_app import prepare_app
 from app.settings.default_settings import load_default_settings
@@ -37,7 +39,9 @@ def process_args(argv: list[str] | None = None) -> argparse.Namespace:
     commands = parser.add_subparsers(title='Commands', dest='command', required=True)
 
     db = commands.add_parser('database', help='Manage the app internal database')
-    _ = db.add_argument('subcommand', help='Action to do on the database', choices=['create', 'rebuild', 'delete', 'update'])
+    _ = db.add_argument('subcommand', help='Action to do on the database', choices=['rebuild', 'update'])
+    _ = db.add_argument('--source', help='Specify the source to get the data from', type=str)
+    _ = db.add_argument('--path', help='Specify the path to the source', type=str)
 
     fs = commands.add_parser('fs', help='Manage the audio files')
     _ = fs.add_argument('subcommand', help='Action to do on the files', choices=['sort', 'flush'])
@@ -60,8 +64,7 @@ def dispatch_command(args: argparse.Namespace) -> None:
     command = get_required_str_arg(args, 'command')
     match command:
         case 'database':
-            print('database command')
-            print(Settings.get_instance().get('database_path'))
+            dispatch_database_command(args)
         case 'fs':
             print('fs command')
         case _:
@@ -86,42 +89,3 @@ def override_default_settings(args: argparse.Namespace) -> None:
         settings.set('database_path', db_path)
 
 
-#==============================================
-#               Helper functions
-#==============================================
-def get_required_str_arg(args: argparse.Namespace, key: str) -> str:
-    '''
-    Return a string positional argument from the parser
-
-    @param {argparse.Namespace} args The parsed args
-    @param {str} key The key of the positional argument
-    @returns {str} The value of the argument
-    '''
-    if type(getattr(args, key, None)) == str:
-        return getattr(args, key, '')
-
-    return ''
-
-
-def get_str_arg(args: argparse.Namespace, key: str, fallback: str | None = None) -> str | None:
-    '''
-    Return the value of an optional argument. If not specified, return `fallback`
-
-    @param {argparse.Namespace} args The args of the app
-    @param {str} key The key of the arg
-    @param {str | None} fallback The fallback value if the arg was not provided
-    @returns {str | None} The arg value or the fallback
-    '''
-    return getattr(args, key, fallback)
-
-
-def get_bool_arg(args: argparse.Namespace, key: str, fallback: bool | None = None) -> bool | None:
-    '''
-    Return the value of an optional argument. If not specified, return `fallback`
-
-    @param {argparse.Namespace} args The args of the app
-    @param {bool} key The key of the arg
-    @param {bool | None} fallback The fallback value if the arg was not provided
-    @returns {bool | None} The arg value or the fallback
-    '''
-    return getattr(args, key, fallback)
